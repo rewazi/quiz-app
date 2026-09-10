@@ -39,7 +39,7 @@ function renderAuth() {
       <label>Email</label>
       <input type="email" id="email" autocomplete="email" />
       <label>Пароль</label>
-      <input type="password" id="password" autocomplete="current-password" />
+      <input type="password" id="password" autocomplete="current-password" minlength="8" />
       <div id="error"></div>
       <div class="row" style="margin-top:16px;">
         <button class="btn" id="submit-btn">Войти</button>
@@ -71,6 +71,10 @@ function renderAuth() {
       errorEl.textContent = "Введите email и пароль.";
       return;
     }
+    if (mode === "register" && password.length < 8) {
+      errorEl.textContent = "Пароль должен содержать минимум 8 символов.";
+      return;
+    }
     submitBtn.disabled = true;
     try {
       if (mode === "login") {
@@ -87,7 +91,13 @@ function renderAuth() {
 }
 
 function describeError(err) {
-  return err?.response?.message || err?.message || "Что-то пошло не так.";
+  const response = err?.response;
+  const fieldErrors = response?.data
+    ? Object.entries(response.data)
+        .map(([field, details]) => `${field}: ${details?.message || details}`)
+        .join(" ")
+    : "";
+  return fieldErrors || response?.message || err?.message || "Что-то пошло не так.";
 }
 
 // ---------- Quiz list ----------

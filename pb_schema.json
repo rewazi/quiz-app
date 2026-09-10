@@ -3,14 +3,16 @@
     "id": "tguzm7a1a0i5e8l",
     "name": "quizzes",
     "type": "base",
+    "system": false,
     "listRule": "isPublished = true || owner = @request.auth.id",
     "viewRule": "isPublished = true || owner = @request.auth.id",
     "createRule": "@request.auth.id != \"\" && owner = @request.auth.id",
     "updateRule": "owner = @request.auth.id",
     "deleteRule": "owner = @request.auth.id",
     "fields": [
-      { "name": "title", "type": "text", "required": true, "max": 100 },
+      { "id": "qz_title_001", "name": "title", "type": "text", "required": true, "max": 100 },
       {
+        "id": "qz_owner_001",
         "name": "owner",
         "type": "relation",
         "required": true,
@@ -18,7 +20,7 @@
         "maxSelect": 1,
         "cascadeDelete": true
       },
-      { "name": "isPublished", "type": "bool" }
+      { "id": "qz_pub_000001", "name": "isPublished", "type": "bool" }
     ],
     "indexes": []
   },
@@ -26,6 +28,7 @@
     "id": "spee3zktesau044",
     "name": "questions",
     "type": "base",
+    "system": false,
     "listRule": "quiz.isPublished = true || quiz.owner = @request.auth.id",
     "viewRule": "quiz.isPublished = true || quiz.owner = @request.auth.id",
     "createRule": "quiz.owner = @request.auth.id",
@@ -33,6 +36,7 @@
     "deleteRule": "quiz.owner = @request.auth.id",
     "fields": [
       {
+        "id": "qn_quiz_00001",
         "name": "quiz",
         "type": "relation",
         "required": true,
@@ -40,12 +44,13 @@
         "maxSelect": 1,
         "cascadeDelete": true
       },
-      { "name": "order", "type": "number" },
-      { "name": "text", "type": "text", "required": true, "max": 300 },
-      { "name": "options", "type": "json" },
-      { "name": "correctIndex", "type": "number" },
-      { "name": "timeLimit", "type": "number" },
+      { "id": "qn_order_00001", "name": "order", "type": "number" },
+      { "id": "qn_text_000001", "name": "text", "type": "text", "required": true, "max": 300 },
+      { "id": "qn_opts_000001", "name": "options", "type": "json" },
+      { "id": "qn_corr_000001", "name": "correctIndex", "type": "number" },
+      { "id": "qn_time_000001", "name": "timeLimit", "type": "number" },
       {
+        "id": "qn_image_00001",
         "name": "image",
         "type": "file",
         "maxSelect": 1,
@@ -59,6 +64,7 @@
     "id": "1gjmbkhkcwkv1g8",
     "name": "games",
     "type": "base",
+    "system": false,
     "listRule": "",
     "viewRule": "",
     "createRule": "@request.auth.id != \"\" && host = @request.auth.id",
@@ -66,6 +72,7 @@
     "deleteRule": "host = @request.auth.id",
     "fields": [
       {
+        "id": "gm_quiz_00001",
         "name": "quiz",
         "type": "relation",
         "required": true,
@@ -73,26 +80,29 @@
         "maxSelect": 1
       },
       {
+        "id": "gm_host_00001",
         "name": "host",
         "type": "relation",
         "required": true,
         "collectionId": "_pb_users_auth_",
         "maxSelect": 1
       },
-      { "name": "code", "type": "text" },
+      { "id": "gm_code_000001", "name": "code", "type": "text" },
       {
+        "id": "gm_stat_000001",
         "name": "status",
         "type": "select",
         "maxSelect": 1,
         "values": ["lobby", "question", "results", "finished"]
       },
       {
+        "id": "gm_curr_000001",
         "name": "currentQuestion",
         "type": "relation",
         "collectionId": "spee3zktesau044",
         "maxSelect": 1
       },
-      { "name": "questionStartedAt", "type": "date" }
+      { "id": "gm_start_000001", "name": "questionStartedAt", "type": "date" }
     ],
     "indexes": ["CREATE UNIQUE INDEX idx_games_code ON games (code)"]
   },
@@ -100,6 +110,7 @@
     "id": "zjufxyax62wsjb4",
     "name": "players",
     "type": "base",
+    "system": false,
     "listRule": "",
     "viewRule": "",
     "createRule": "game.status = \"lobby\"",
@@ -107,6 +118,7 @@
     "deleteRule": "game.host = @request.auth.id",
     "fields": [
       {
+        "id": "pl_game_00001",
         "name": "game",
         "type": "relation",
         "required": true,
@@ -114,9 +126,10 @@
         "maxSelect": 1,
         "cascadeDelete": true
       },
-      { "name": "nickname", "type": "text", "required": true, "max": 20 },
-      { "name": "score", "type": "number" },
+      { "id": "pl_nick_000001", "name": "nickname", "type": "text", "required": true, "max": 20 },
+      { "id": "pl_score_000001", "name": "score", "type": "number" },
       {
+        "id": "pl_user_00001",
         "name": "user",
         "type": "relation",
         "collectionId": "_pb_users_auth_",
@@ -129,6 +142,7 @@
     "id": "69md3fglg9vfrp6",
     "name": "answers",
     "type": "base",
+    "system": false,
     "listRule": "game.host = @request.auth.id",
     "viewRule": "game.host = @request.auth.id",
     "createRule": "game.status = \"question\" && player.game = game && question = game.currentQuestion",
@@ -136,6 +150,7 @@
     "deleteRule": null,
     "fields": [
       {
+        "id": "an_game_00001",
         "name": "game",
         "type": "relation",
         "required": true,
@@ -144,6 +159,7 @@
         "cascadeDelete": true
       },
       {
+        "id": "an_play_00001",
         "name": "player",
         "type": "relation",
         "required": true,
@@ -152,15 +168,16 @@
         "cascadeDelete": true
       },
       {
+        "id": "an_ques_00001",
         "name": "question",
         "type": "relation",
         "required": true,
         "collectionId": "spee3zktesau044",
         "maxSelect": 1
       },
-      { "name": "optionIndex", "type": "number" },
-      { "name": "isCorrect", "type": "bool" },
-      { "name": "points", "type": "number" }
+      { "id": "an_opt_000001", "name": "optionIndex", "type": "number" },
+      { "id": "an_corr_000001", "name": "isCorrect", "type": "bool" },
+      { "id": "an_point_00001", "name": "points", "type": "number" }
     ],
     "indexes": ["CREATE UNIQUE INDEX idx_answers_player_question ON answers (player, question)"]
   }
