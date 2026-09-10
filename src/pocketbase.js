@@ -25,7 +25,12 @@ export async function register(email, password) {
     password,
     passwordConfirm: password
   });
-  return login(email, password);
+  try {
+    return await login(email, password);
+  } catch (error) {
+    error.accountCreated = true;
+    throw error;
+  }
 }
 
 export function logout() {

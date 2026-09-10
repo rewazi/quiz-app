@@ -83,7 +83,15 @@ function renderAuth() {
         await register(email, password);
       }
     } catch (err) {
-      errorEl.textContent = describeError(err);
+      errorEl.textContent = err.accountCreated
+        ? `Аккаунт создан, но автоматический вход не выполнен. Войдите вручную. ${describeError(err)}`
+        : describeError(err);
+      if (err.accountCreated) {
+        mode = "login";
+        title.textContent = "Вход";
+        submitBtn.textContent = "Войти";
+        toggleBtn.textContent = "Нет аккаунта? Регистрация";
+      }
     } finally {
       submitBtn.disabled = false;
     }
