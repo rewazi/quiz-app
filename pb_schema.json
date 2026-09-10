@@ -1,0 +1,167 @@
+[
+  {
+    "id": "tguzm7a1a0i5e8l",
+    "name": "quizzes",
+    "type": "base",
+    "listRule": "isPublished = true || owner = @request.auth.id",
+    "viewRule": "isPublished = true || owner = @request.auth.id",
+    "createRule": "@request.auth.id != \"\" && owner = @request.auth.id",
+    "updateRule": "owner = @request.auth.id",
+    "deleteRule": "owner = @request.auth.id",
+    "fields": [
+      { "name": "title", "type": "text", "required": true, "max": 100 },
+      {
+        "name": "owner",
+        "type": "relation",
+        "required": true,
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1,
+        "cascadeDelete": true
+      },
+      { "name": "isPublished", "type": "bool" }
+    ],
+    "indexes": []
+  },
+  {
+    "id": "spee3zktesau044",
+    "name": "questions",
+    "type": "base",
+    "listRule": "quiz.isPublished = true || quiz.owner = @request.auth.id",
+    "viewRule": "quiz.isPublished = true || quiz.owner = @request.auth.id",
+    "createRule": "quiz.owner = @request.auth.id",
+    "updateRule": "quiz.owner = @request.auth.id",
+    "deleteRule": "quiz.owner = @request.auth.id",
+    "fields": [
+      {
+        "name": "quiz",
+        "type": "relation",
+        "required": true,
+        "collectionId": "tguzm7a1a0i5e8l",
+        "maxSelect": 1,
+        "cascadeDelete": true
+      },
+      { "name": "order", "type": "number" },
+      { "name": "text", "type": "text", "required": true, "max": 300 },
+      { "name": "options", "type": "json" },
+      { "name": "correctIndex", "type": "number" },
+      { "name": "timeLimit", "type": "number" },
+      {
+        "name": "image",
+        "type": "file",
+        "maxSelect": 1,
+        "maxSize": 5242880,
+        "mimeTypes": ["image/png", "image/jpeg", "image/webp", "image/gif"]
+      }
+    ],
+    "indexes": ["CREATE INDEX idx_questions_quiz_order ON questions (quiz, `order`)"]
+  },
+  {
+    "id": "1gjmbkhkcwkv1g8",
+    "name": "games",
+    "type": "base",
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "@request.auth.id != \"\" && host = @request.auth.id",
+    "updateRule": "host = @request.auth.id",
+    "deleteRule": "host = @request.auth.id",
+    "fields": [
+      {
+        "name": "quiz",
+        "type": "relation",
+        "required": true,
+        "collectionId": "tguzm7a1a0i5e8l",
+        "maxSelect": 1
+      },
+      {
+        "name": "host",
+        "type": "relation",
+        "required": true,
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1
+      },
+      { "name": "code", "type": "text" },
+      {
+        "name": "status",
+        "type": "select",
+        "maxSelect": 1,
+        "values": ["lobby", "question", "results", "finished"]
+      },
+      {
+        "name": "currentQuestion",
+        "type": "relation",
+        "collectionId": "spee3zktesau044",
+        "maxSelect": 1
+      },
+      { "name": "questionStartedAt", "type": "date" }
+    ],
+    "indexes": ["CREATE UNIQUE INDEX idx_games_code ON games (code)"]
+  },
+  {
+    "id": "zjufxyax62wsjb4",
+    "name": "players",
+    "type": "base",
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "game.status = \"lobby\"",
+    "updateRule": "game.host = @request.auth.id",
+    "deleteRule": "game.host = @request.auth.id",
+    "fields": [
+      {
+        "name": "game",
+        "type": "relation",
+        "required": true,
+        "collectionId": "1gjmbkhkcwkv1g8",
+        "maxSelect": 1,
+        "cascadeDelete": true
+      },
+      { "name": "nickname", "type": "text", "required": true, "max": 20 },
+      { "name": "score", "type": "number" },
+      {
+        "name": "user",
+        "type": "relation",
+        "collectionId": "_pb_users_auth_",
+        "maxSelect": 1
+      }
+    ],
+    "indexes": ["CREATE UNIQUE INDEX idx_players_game_nickname ON players (game, nickname)"]
+  },
+  {
+    "id": "69md3fglg9vfrp6",
+    "name": "answers",
+    "type": "base",
+    "listRule": "game.host = @request.auth.id",
+    "viewRule": "game.host = @request.auth.id",
+    "createRule": "game.status = \"question\" && player.game = game && question = game.currentQuestion",
+    "updateRule": null,
+    "deleteRule": null,
+    "fields": [
+      {
+        "name": "game",
+        "type": "relation",
+        "required": true,
+        "collectionId": "1gjmbkhkcwkv1g8",
+        "maxSelect": 1,
+        "cascadeDelete": true
+      },
+      {
+        "name": "player",
+        "type": "relation",
+        "required": true,
+        "collectionId": "zjufxyax62wsjb4",
+        "maxSelect": 1,
+        "cascadeDelete": true
+      },
+      {
+        "name": "question",
+        "type": "relation",
+        "required": true,
+        "collectionId": "spee3zktesau044",
+        "maxSelect": 1
+      },
+      { "name": "optionIndex", "type": "number" },
+      { "name": "isCorrect", "type": "bool" },
+      { "name": "points", "type": "number" }
+    ],
+    "indexes": ["CREATE UNIQUE INDEX idx_answers_player_question ON answers (player, question)"]
+  }
+]
