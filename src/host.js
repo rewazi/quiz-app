@@ -108,6 +108,17 @@ function describeError(err) {
   return fieldErrors || response?.message || err?.message || "Что-то пошло не так.";
 }
 
+function getQuestionOptions(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string" || !value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 // ---------- Quiz list ----------
 
 async function renderQuizList() {
@@ -383,7 +394,7 @@ async function loadQuestions(quizId) {
       <div class="quiz-list-item" data-id="${q.id}">
         <div>
           <strong>${i + 1}. ${escapeHtml(q.text)}</strong><br />
-          <span class="badge">${JSON.parse(q.options || "[]").length} варианта</span>
+          <span class="badge">${getQuestionOptions(q.options).length} варианта</span>
           <span class="badge">${q.timeLimit}с</span>
         </div>
         <div class="row" style="flex:0 0 auto; gap:4px;">
