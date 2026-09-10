@@ -62,3 +62,17 @@ label { display: block; font-size: 13px; color: #555; margin-top: 10px; }
 .home-links { display: flex; gap: 16px; margin-top: 24px; }
 .home-links .btn { flex: 1; text-align: center; padding: 24px; font-size: 18px; }
 #error { color: #dc2626; font-size: 14px; margin-top: 8px; min-height: 18px; }
+.game-code {
+  display: block;
+  font-size: 48px;
+  letter-spacing: 4px;
+  margin: 12px 0;
+}
+.inline-code { letter-spacing: 2px; }
+.eyebrow { color: #4f46e5; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+.player-row { padding: 12px 0; border-bottom: 1px solid #eee; }
+.player-row:last-child { border-bottom: none; }
+@media (max-width: 560px) {
+  .game-code { font-size: 36px; }
+  .quiz-list-item { align-items: flex-start; flex-direction: column; gap: 10px; }
+}

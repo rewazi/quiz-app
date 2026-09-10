@@ -1,10 +1,16 @@
 import { pb, isLoggedIn, currentUser, login, register, logout } from "./pocketbase.js";
 
 const app = document.getElementById("app");
+let stopPlayersSubscription = null;
 
 function getQuizIdFromHash() {
   const m = location.hash.match(/^#\/quiz\/(.+)$/);
   return m ? m[1] : null;
+}
+
+function getGameIdFromHash() {
+  const match = location.hash.match(/^#\/game\/([^/]+)$/);
+  return match ? match[1] : null;
 }
 
 function navigateTo(hash) {
@@ -19,6 +25,11 @@ render();
 async function render() {
   if (!isLoggedIn()) {
     renderAuth();
+    return;
+  }
+  const gameId = getGameIdFromHash();
+  if (gameId) {
+    await renderGameLobby(gameId);
     return;
   }
   const quizId = getQuizIdFromHash();
@@ -183,13 +194,105 @@ async function renderQuizList() {
             <strong>${escapeHtml(q.title)}</strong>
             <span class="badge">${q.isPublished ? "опубликована" : "черновик"}</span>
           </div>
-          <a class="btn secondary" href="#/quiz/${q.id}">Редактировать</a>
+          <div class="row" style="flex:0 0 auto;">
+            <a class="btn secondary" href="#/quiz/${q.id}">Редактировать</a>
+            <button class="btn start-game" data-quiz-id="${q.id}">Создать игру</button>
+          </div>
         </div>`
       )
       .join("");
+
+    listEl.querySelectorAll(".start-game").forEach((button) => {
+      button.addEventListener("click", () => createGame(button.dataset.quizId));
+    });
   } catch (err) {
     listEl.textContent = describeError(err);
   }
+}
+
+async function createGame(quizId) {
+  try {
+    const code = await createGameCode();
+    const game = await pb.collection("games").create({
+      quiz: quizId,
+      host: currentUser().id,
+      code,
+      status: "lobby"
+    });
+    navigateTo(`#/game/${game.id}`);
+  } catch (err) {
+    const errorEl = document.getElementById("error");
+    if (errorEl) errorEl.textContent = describeError(err);
+  }
+}
+
+async function createGameCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const code = Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+    try {
+      await pb.collection("games").getFirstListItem(`code = "${code}"`);
+    } catch (err) {
+      if (err?.status === 404) return code;
+      throw err;
+    }
+  }
+  throw new Error("Не удалось сгенерировать код игры. Попробуйте ещё раз.");
+}
+
+async function renderGameLobby(gameId) {
+  if (stopPlayersSubscription) stopPlayersSubscription();
+  app.innerHTML = `<p>Загрузка лобби…</p>`;
+
+  let game;
+  try {
+    game = await pb.collection("games").getOne(gameId, { expand: "quiz" });
+  } catch (err) {
+    app.innerHTML = `<p>${escapeHtml(describeError(err))}</p><a href="#/">Назад</a>`;
+    return;
+  }
+
+  app.innerHTML = `
+    <a href="#/" id="lobby-back">&larr; Мои анкеты</a>
+    <div class="card lobby-card">
+      <p class="eyebrow">Лобби ведущего</p>
+      <h1>${escapeHtml(game.expand?.quiz?.title || "Игра")}</h1>
+      <p>Код для игроков</p>
+      <strong class="game-code">${escapeHtml(game.code)}</strong>
+      <p id="lobby-status">Ожидаем игроков</p>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;">
+        <h2>Игроки <span id="player-count">0</span></h2>
+        <button class="btn danger" id="close-game">Закрыть игру</button>
+      </div>
+      <div id="player-list">Загрузка…</div>
+    </div>
+  `;
+
+  document.getElementById("lobby-back").addEventListener("click", () => {
+    if (stopPlayersSubscription) stopPlayersSubscription();
+  });
+  document.getElementById("close-game").addEventListener("click", async () => {
+    await pb.collection("games").delete(gameId);
+    navigateTo("#/");
+  });
+
+  const refreshPlayers = async () => {
+    const players = await pb.collection("players").getFullList({ filter: `game = "${gameId}"` });
+    const list = document.getElementById("player-list");
+    const count = document.getElementById("player-count");
+    if (!list || !count) return;
+    count.textContent = players.length;
+    list.innerHTML = players.length
+      ? players.map((player) => `<div class="player-row"><strong>${escapeHtml(player.nickname)}</strong></div>`).join("")
+      : "Пока никто не присоединился.";
+  };
+
+  await refreshPlayers();
+  stopPlayersSubscription = await pb.collection("players").subscribe("*", (event) => {
+    if (event.record.game === gameId) refreshPlayers();
+  });
 }
 
 // ---------- Quiz editor ----------
