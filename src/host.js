@@ -158,8 +158,7 @@ async function renderQuizList() {
   const listEl = document.getElementById("quiz-list");
   try {
     const quizzes = await pb.collection("quizzes").getFullList({
-      filter: `owner = "${currentUser().id}"`,
-      sort: "-created"
+      filter: `owner = "${currentUser().id}"`
     });
     if (quizzes.length === 0) {
       listEl.textContent = "Пока нет анкет — создайте первую выше.";
